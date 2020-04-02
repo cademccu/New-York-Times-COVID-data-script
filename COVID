@@ -23,9 +23,13 @@ def getCurrentStatsForCounty(countyName):
 
         final_row = []
         for row in county_reader:
-            if row[1] == countyName:
+            if row[1] == countyName[0] and row[2] == countyName[1]:
                 final_row = row
 
+        if len(final_row) == 0:
+            print("For", countyName[0], ",", countyName[1])
+            print("County-State combonation not found in data")
+            sys.exit(1)
         return County(final_row)
 
 
@@ -40,23 +44,29 @@ def outputCounty(county):
     print("\t{0:<30}| {1:<30}".format("DEATHS", county.county_deaths))
     print("-------------------------------------------------------------")
     # TODO get ratio of reported cases to deaths
+
+
+def outputHelp():
+    print("USAGE")
+    print("{0:<30}| {1:<30}".format("-u", "Updates data with a pull from GitHub"))
+    print("{0:<30}| {1:<30}".format("-c [ARG]", "Searches for specific county. FORMAT(no spaces): county,state "))
+    print("{0:<30}| {1:<30}".format("-t", "Send text messages"))
+    print("{0:<30}| {1:<30}".format("-o", "Output saved list to console"))
+    print("{0:<30}| {1:<30}".format("-h", "Help"))
+    sys.exit(0)
+
 # Main method
 if __name__ == '__main__':
    
-    # process command line args
-    # u - update from github
-    # c (arg) search for specific county name
-    # t - text option
-    # o - prints to console
-    regular_options = "outc:"
-    # TODO help?
+    regular_options = "houtc:"
 
     # TODO integrate state totals?
-    # TODO
-    # try catch on search TODO
-    # deliniate with state by periods
-    counties = ["Larimer", "Denver", "King", "New York City", "Sheboygan"]
+    counties = [["Larimer", "Colorado"],
+            ["Denver", "Colorado"],
+            ["Hamilton", "Ohio"]]
+
     county_list = []
+    
     # create each couty object and add to list
     for county in counties:
         county_list.append(getCurrentStatsForCounty(county))
@@ -68,22 +78,23 @@ if __name__ == '__main__':
         print("Argument Not Recognized, run with '-h' for usage")
         sys.exit(1)
 
-    update_flag = False
-
     for opt in options:
+        if opt[0] == "-h":
+            outputHelp()
         if opt[0] == "-u":
-            update_flag = True
+            subprocess.call(["git", "-C", "../covid-19-data", "pull", "origin", "master"])
         elif opt[0] == "-t":
             print("\n===  [SENDING TEXT MESSAGES] ===")
             # TODO write in text updates
         elif opt[0] == "-c":
             print("Searching for county: ", opt[1])
-            # TODO search
+            # split into usable list 
+            single_county_search = opt[1].split(',')
+            outputCounty(getCurrentStatsForCounty(single_county_search))
+
         elif opt[0] == "-o":
             for county in county_list:
                 outputCounty(county)
 
-    if update_flag:
-        subprocess.call(["git", "-C", "../covid-19-data", "pull", "origin", "master"])
 
 
