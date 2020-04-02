@@ -1,0 +1,89 @@
+#! /usr/bin/env python3
+
+import subprocess
+import csv
+import sys
+import getopt
+
+
+# class for holding information about counties
+class County:
+    def __init__(self, row):
+        self.county_date = row[0]
+        self.county_name = row[1]
+        self.county_state = row[2]
+        self.county_fips = row[3]
+        self.county_cases = row[4]
+        self.county_deaths = row[5]    
+
+def getCurrentStatsForCounty(countyName):
+    
+    with open("../covid-19-data/us-counties.csv") as csv_file:
+        county_reader = csv.reader(csv_file,delimiter=',')
+
+        final_row = []
+        for row in county_reader:
+            if row[1] == countyName:
+                final_row = row
+
+        return County(final_row)
+
+
+def outputCounty(county):
+    print("-------------------------------------------------------------")
+    print("COUNTY: ", county.county_name)
+    print("=============================================================")
+    print("\t{0:<30}| {1:<30}".format("MOST RECENT DATE", county.county_date))
+    print("\t{0:<30}| {1:<30}".format("STATE", county.county_state))
+    print("\t{0:<30}| {1:<30}".format("FIPS", county.county_fips))
+    print("\t{0:<30}| {1:<30}".format("CASES", county.county_cases))
+    print("\t{0:<30}| {1:<30}".format("DEATHS", county.county_deaths))
+    print("-------------------------------------------------------------")
+    # TODO get ratio of reported cases to deaths
+# Main method
+if __name__ == '__main__':
+   
+    # process command line args
+    # u - update from github
+    # c (arg) search for specific county name
+    # t - text option
+    # o - prints to console
+    regular_options = "outc:"
+    # TODO help?
+
+    # TODO integrate state totals?
+    # TODO
+    # try catch on search TODO
+    # deliniate with state by periods
+    counties = ["Larimer", "Denver", "King", "New York City", "Sheboygan"]
+    county_list = []
+    # create each couty object and add to list
+    for county in counties:
+        county_list.append(getCurrentStatsForCounty(county))
+
+    try:
+        options, remainder = getopt.getopt(sys.argv[1:], regular_options)
+    except getopt.error as err:
+        print("getopt() error")
+        print("Argument Not Recognized, run with '-h' for usage")
+        sys.exit(1)
+
+    update_flag = False
+
+    for opt in options:
+        if opt[0] == "-u":
+            update_flag = True
+        elif opt[0] == "-t":
+            print("\n===  [SENDING TEXT MESSAGES] ===")
+            # TODO write in text updates
+        elif opt[0] == "-c":
+            print("Searching for county: ", opt[1])
+            # TODO search
+        elif opt[0] == "-o":
+            for county in county_list:
+                outputCounty(county)
+
+    if update_flag:
+        subprocess.call(["git", "-C", "../covid-19-data", "pull", "origin", "master"])
+
+
